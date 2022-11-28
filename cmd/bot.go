@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
+	"github.com/streadway/amqp"
 	"gopkg.in/telebot.v3"
 	"log"
 	"recipe_bot/internal/models"
@@ -12,6 +14,76 @@ import (
 type UpgradeBot struct {
 	Bot   *telebot.Bot
 	Users *repository.UserModel
+}
+
+// Parse error if catch.
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
+func GetLetterFromAdmin() {
+	// Make a connection to CloudAMQP.
+	conn, err := amqp.Dial("amqps://dfyszgdv:mHBW0QgceZN0G5xtSUOCOOOsGTNfjW6V@rattlesnake-01.rmq.cloudamqp.com/dfyszgdv")
+	failOnError(err, "Failed to connect to CloudAMQP")
+	defer conn.Close()
+
+	// Create a channel.
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	// Queue name must be the same with publisher
+	queueName := "mail"
+	q, err := ch.QueueDeclare(queueName, false, false, false, false, nil)
+	fmt.Println(err, "Failed to declare a queue")
+
+	// Listen to the queue.
+	msgs, err := ch.Consume(q.Name, "", true, false, false, false, nil)
+	failOnError(err, "Failed to register a consumer")
+
+	forever := make(chan bool)
+
+	upgradeBot := InitBot("5789904297:AAHEGC_K8xe-Pmmu2wiMc1AJ3AIuDRn6E7Y")
+	db, err := sql.Open("mysql", "root:zhanarys@/recipe_bot_db")
+
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select telegram_id from recipe_bot_db.users")
+	defer rows.Close()
+	ids := []int64{}
+
+	for rows.Next() {
+		var telegram_id int64
+		rows.Scan(&telegram_id)
+		ids = append(ids, telegram_id)
+	}
+
+	defer rows.Close()
+
+	// Make a go routine by using anonymous function
+	go func() {
+		for d := range msgs {
+			log.Printf("Received a message: %s", d.Body)
+			var received = string(d.Body)
+			db.Exec("insert into recipe_bot_db.mails (letter) values (?)", received)
+
+			for _, v := range ids {
+				user := telebot.User{ID: v}
+				upgradeBot.Send(&user, received)
+			}
+
+		}
+	}()
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+
+	// Always listening for incoming message from message broker.
+	<-forever
 }
 
 func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
