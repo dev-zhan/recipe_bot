@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"gopkg.in/telebot.v3"
 	"log"
 	"recipe_bot/internal/models"
@@ -51,4 +52,50 @@ func InitBot(token string) *telebot.Bot {
 	}
 
 	return b
+}
+
+func (bot *UpgradeBot) ShowRandomRecipe(ctx telebot.Context) error {
+	var randomRecipe string
+	newRecipe, err := repository.GetRandomRecipe()
+	if err != nil {
+		randomRecipe += fmt.Sprintf("%s", &err)
+	} else {
+		randomRecipe += fmt.Sprintf("%s", &newRecipe)
+	}
+
+	return ctx.Send(randomRecipe)
+}
+
+func (bot *UpgradeBot) ShowRecipeByName(ctx telebot.Context) error {
+	args := ctx.Args()
+	if len(args) != 1 {
+		return ctx.Send("Введите только одно имя")
+	}
+	var recipeByName string
+
+	newRecipe, err := repository.GetRecipeByName(args[0])
+	if err != nil {
+		recipeByName += fmt.Sprintf("%s", "There is no receipts with this name. \n Try again: /name {recipename}")
+	} else {
+		recipeByName += fmt.Sprintf("%s", &newRecipe)
+	}
+
+	return ctx.Send(recipeByName)
+}
+
+func (bot *UpgradeBot) ShowRecipeByIngredient(ctx telebot.Context) error {
+	args := ctx.Args()
+	if len(args) != 1 {
+		return ctx.Send("Введите только один ингредиент")
+	}
+	var recipeByIngredient string
+
+	newRecipe, err := repository.GetrecipeByIngredient(args[0])
+	if err != nil {
+		recipeByIngredient += fmt.Sprintf("%s", "There is no receipts with this ingredient. \n Try again: /ingredient {recipe ingredient}")
+	} else {
+		recipeByIngredient += fmt.Sprintf("%s", &newRecipe)
+	}
+
+	return ctx.Send(recipeByIngredient)
 }
