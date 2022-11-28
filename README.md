@@ -1,7 +1,7 @@
 # Recipe Teller Go Bot - Рецепт Бот
 Телеграм Бот, который отправляет рецепты пользователям.
 
-![Food gif here](https://github.com/znamazbayeva/recipe-teller-go-bot/blob/main/hungry.gif)
+![Food gif here](https://github.com/dev-zhan/recipe-go-bot/blob/main/hungry.gif)
 
 ### Краткий принцип работы бота:
 - Берет данные из другой API. Ссылка на неё: https://www.themealdb.com/
