@@ -16,6 +16,13 @@
 - GO, goroutines.
 - RabbitMQ, SQL, CRON. 
 
+### Примеры работы бота:
+- Start. Когда пользователь только зарегистрировался.
+![Start photo here](https://github.com/dev-zhan/recipe_bot/blob/master/start.png)
+
+- Random. Получение рандомных рецептов и ссылки для подробней информации.
+![Random photo here](https://github.com/dev-zhan/recipe_bot/blob/master/random1.png)
+![Random photo here](https://github.com/dev-zhan/recipe_bot/blob/master/random2.png)
 1. Install dependencies
 
 ```
